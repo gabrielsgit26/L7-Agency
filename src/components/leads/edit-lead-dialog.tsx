@@ -48,14 +48,12 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 
-import {
-    updateLead,
-} from '@/services/leads.service'
+import { leadsService } from '@/services/leads.service'
 import { Lead } from '@/types/lead'
 
 
 export interface LeadWithId extends Lead {
-  id: string
+    id: string
 }
 
 // ============================================
@@ -192,20 +190,12 @@ export function EditLeadDialog({
             }
 
             const response =
-                await updateLead(
+                await leadsService.updateLead(
                     lead.id,
                     values
-                )
+                );
 
-            if (!response.success) {
-                toast.error(
-                    response.message
-                )
-
-                return
-            }
-
-            toast.success(
+                toast.success(
                 'Lead updated successfully'
             )
 
