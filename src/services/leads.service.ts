@@ -1,279 +1,109 @@
-// ============================================
-// FILE: src/services/leads.service.ts
-// ============================================
+'use client'
 
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  updateDoc,
-  where,
-} from 'firebase/firestore'
-
-import { db } from '@/lib/firebase/client'
 import { Lead } from '@/types/lead'
+import { auth } from '@/lib/firebase/client'
 
-// ============================================
-// Types
-// ============================================
-
-
-// ============================================
-// COLLECTION REFERENCE
-// ============================================
-
-const leadsCollection =
-  collection(db, 'leads')
-
-// ============================================
-// CREATE LEAD
-// ============================================
-
-export async function createLead(
-  data: Lead
-) {
-  try {
-    const response = await addDoc(
-      leadsCollection,
-      {
-        ...data,
-
-        createdAt:
-          serverTimestamp(),
-      }
-    )
-
-    return {
-      success: true,
-      id: response.id,
-    }
-  } catch (error: any) {
-    console.error(
-      'Create Lead Error:',
-      error
-    )
-
-    return {
-      success: false,
-      message:
-        error.message ||
-        'Failed to create lead.',
-    }
-  }
+interface CreateLeadDTO {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  status: Lead['status']
+  assignedTo: string
+  notes?: string
 }
 
-// ============================================
-// GET ALL LEADS
-// ADMIN USE
-// ============================================
-
-export async function getAllLeads() {
-  try {
-    const q = query(
-      leadsCollection,
-      orderBy('createdAt', 'desc')
-    )
-
-    const snapshot =
-      await getDocs(q)
-
-    const leads: Lead[] =
-      snapshot.docs.map((doc) => ({
-        ...(doc.data() as Lead),
-      }))
-
-    return {
-      success: true,
-      data: leads,
-    }
-  } catch (error: any) {
-    console.error(
-      'Get Leads Error:',
-      error
-    )
-
-    return {
-      success: false,
-      message:
-        error.message ||
-        'Failed to fetch leads.',
-    }
-  }
+interface UpdateLeadDTO {
+  firstName?: string
+  lastName?: string
+  email?: string
+  phone?: string
+  status?: Lead['status']
+  assignedTo?: string
+  notes?: string
 }
 
-// ============================================
-// GET USER LEADS
-// SALESPERSON USE
-// ============================================
-
-export async function getUserLeads(
-  userId: string
-) {
-  try {
-    const q = query(
-      leadsCollection,
-
-      where(
-        'assignedTo',
-        '==',
-        userId
-      ),
-
-      orderBy('createdAt', 'desc')
-    )
-
-    const snapshot =
-      await getDocs(q)
-
-    const leads: Lead[] =
-      snapshot.docs.map((doc) => ({
-        ...(doc.data() as Lead),
-      }))
-
-    return {
-      success: true,
-      data: leads,
-    }
-  } catch (error: any) {
-    console.error(
-      'Get User Leads Error:',
-      error
-    )
-
-    return {
-      success: false,
-      message:
-        error.message ||
-        'Failed to fetch user leads.',
-    }
-  }
+// -----------------------------
+// Helper: get Firebase ID Token
+// -----------------------------
+async function getAuthToken(): Promise<string> {
+  const user = auth.currentUser
+  if (!user) throw new Error('User not logged in')
+  return await user.getIdToken()
 }
 
-// ============================================
-// UPDATE LEAD
-// ============================================
-
-export async function updateLead(
-  leadId: string,
-  data: Partial<Lead>
-) {
-  try {
-    const leadRef = doc(
-      db,
-      'leads',
-      leadId
-    )
-
-    await updateDoc(leadRef, {
-      ...data,
+// -----------------------------
+// Leads Service
+// -----------------------------
+export const leadsService = {
+  // Fetch leads (role filtered on server)
+  async getLeads(): Promise<Lead[]> {
+    const token = await getAuthToken()
+    const res = await fetch('/api/leads', {
+      headers: { Authorization: `Bearer ${token}` },
     })
 
-    return {
-      success: true,
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to fetch leads')
     }
-  } catch (error: any) {
-    console.error(
-      'Update Lead Error:',
-      error
-    )
 
-    return {
-      success: false,
-      message:
-        error.message ||
-        'Failed to update lead.',
+    const data = await res.json()
+    return data.leads
+  },
+
+  // Create a new lead
+  async createLead(lead: CreateLeadDTO): Promise<string> {
+    const token = await getAuthToken()
+    const res = await fetch('/api/leads/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(lead),
+    })
+
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to create lead')
     }
-  }
-}
 
-// ============================================
-// DELETE LEAD
-// ============================================
+    const data = await res.json()
+    return data.id
+  },
 
-export async function deleteLead(
-  leadId: string
-) {
-  try {
-    const leadRef = doc(
-      db,
-      'leads',
-      leadId
-    )
+  // Update a lead
+  async updateLead(id: string, updates: UpdateLeadDTO): Promise<void> {
+    const token = await getAuthToken()
+    const res = await fetch(`/api/leads/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updates),
+    })
 
-    await deleteDoc(leadRef)
-
-    return {
-      success: true,
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to update lead')
     }
-  } catch (error: any) {
-    console.error(
-      'Delete Lead Error:',
-      error
-    )
+  },
 
-    return {
-      success: false,
-      message:
-        error.message ||
-        'Failed to delete lead.',
+  // Delete a lead
+  async deleteLead(id: string): Promise<void> {
+    const token = await getAuthToken()
+    const res = await fetch(`/api/leads/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to delete lead')
     }
-  }
-}
-
-// ============================================
-// REALTIME LEADS LISTENER
-// ============================================
-
-export function subscribeToLeads(
-  callback: (leads: Lead[]) => void
-) {
-  const q = query(
-    leadsCollection,
-    orderBy('createdAt', 'desc')
-  )
-
-  return onSnapshot(q, (snapshot) => {
-    const leads: Lead[] =
-      snapshot.docs.map((doc) => ({
-        ...(doc.data() as Lead),
-      }))
-
-    callback(leads)
-  })
-}
-
-// ============================================
-// REALTIME USER LEADS LISTENER
-// ============================================
-
-export function subscribeToUserLeads(
-  userId: string,
-  callback: (leads: Lead[]) => void
-) {
-  const q = query(
-    leadsCollection,
-
-    where(
-      'assignedTo',
-      '==',
-      userId
-    ),
-
-    orderBy('createdAt', 'desc')
-  )
-
-  return onSnapshot(q, (snapshot) => {
-    const leads: Lead[] =
-      snapshot.docs.map((doc) => ({
-        ...(doc.data() as Lead),
-      }))
-
-    callback(leads)
-  })
+  },
 }

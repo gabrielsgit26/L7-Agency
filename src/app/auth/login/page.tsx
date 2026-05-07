@@ -104,7 +104,7 @@ export default function LoginPage() {
       if (!response.success) {
         toast.error(
           response.message ||
-            'Invalid credentials'
+          'Invalid credentials'
         )
 
         return
@@ -145,7 +145,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md rounded-2xl shadow-xl border-0">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-3xl font-bold">
-            CRM Login
+            L7 Agency Login
           </CardTitle>
 
           <CardDescription>
@@ -233,7 +233,7 @@ export default function LoginPage() {
           {/* FOOTER */}
 
           <div className="mt-6 text-center text-sm text-slate-500">
-            CRM Management System
+            L7 Agency Management System
           </div>
         </CardContent>
       </Card>
