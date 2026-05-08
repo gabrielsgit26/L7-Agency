@@ -120,7 +120,7 @@ export function AuthProvider({
     } else if (role === 'salesperson' && !pathname.includes('/dashboard')) {
       router.push('/dashboard/salesperson')
     }
-  }, [user, loading])
+  }, [user, role, loading])
 
   return (
     <AuthContext.Provider
