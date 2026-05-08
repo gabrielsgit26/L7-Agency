@@ -116,10 +116,19 @@ export async function PATCH(req: Request) {
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request) {
   const token = req.headers.get('Authorization')?.replace('Bearer ', '')
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { searchParams } = new URL(req.url)
 
+  const id = searchParams.get("id")
+
+  if (!id) {
+    return NextResponse.json(
+      { error: "Lead ID is required" },
+      { status: 400 }
+    )
+  }
   try {
     const decoded = await adminAuth.verifyIdToken(token)
     const uid = decoded.uid
@@ -128,7 +137,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     const userDoc = await adminDb.collection('users').doc(uid).get()
     const role = userDoc.data()?.role || 'salesperson'
 
-    const leadRef = adminDb.collection('leads').doc(params.id)
+    const leadRef = adminDb.collection('leads').doc(id)
     const leadSnap = await leadRef.get()
 
     if (!leadSnap.exists) return NextResponse.json({ error: 'Lead not found' }, { status: 404 })
