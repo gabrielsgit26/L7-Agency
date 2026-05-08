@@ -9,7 +9,6 @@ export async function GET(req: Request) {
     try {
         const decoded = await adminAuth.verifyIdToken(token)
         const requesterUid = decoded.uid
-        console.log('Decoded Token:', decoded) // Debugging line
         // Get requester's role
         const requesterDoc = await adminDb.collection('users').doc(requesterUid).get()
         if (!requesterDoc.exists) return NextResponse.json({ error: 'Requester not found' }, { status: 404 })
