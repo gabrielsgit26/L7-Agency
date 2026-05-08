@@ -89,21 +89,21 @@ export function AuthProvider({
               }
               setRole(result.data.role as UserRole);
               setUser(result.data);
-              if (result.data.role === 'admin' && !pathnameref.current.includes('/dashboard')) {
-                console.log('Redirecting to admin dashboard')
-                router.replace('/dashboard/admin')
-              } else if (result.data.role === 'salesperson' && !pathnameref.current.includes('/dashboard')) {
-                console.log('Redirecting to salesperson dashboard')
-                router.replace('/dashboard/salesperson')
-              }
+              // if (result.data.role === 'admin' && !pathnameref.current.includes('/dashboard')) {
+              //   console.log('Redirecting to admin dashboard')
+              //   router.replace('/dashboard/admin')
+              // } else if (result.data.role === 'salesperson' && !pathnameref.current.includes('/dashboard')) {
+              //   console.log('Redirecting to salesperson dashboard')
+              //   router.replace('/dashboard/salesperson')
+              // }
 
             } else {
               // User logged out
               setUser(null)
               setRole(null)
-              if (pathnameref.current.includes('/dashboard')) {
-                router.replace('/')
-              }
+              // if (pathnameref.current.includes('/dashboard')) {
+              //   router.replace('/')
+              // }
             }
           } catch (error) {
             console.error(
@@ -120,8 +120,16 @@ export function AuthProvider({
   }, [])
 
   useEffect(() => {
-    pathnameref.current = pathname;
-  }, [pathname])
+    if (!role || !user) return
+
+    const isDashboard = pathname?.includes('/dashboard')
+    if (role === 'admin' && !isDashboard) {
+      router.replace('/dashboard/admin')
+    } else if (role === 'salesperson' && !isDashboard) {
+      router.replace('/dashboard/salesperson')
+    }
+  }, [role, user, pathname, router])
+  
   return (
     <AuthContext.Provider
       value={{
