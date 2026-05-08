@@ -96,15 +96,18 @@ export function AuthProvider({
               }).catch((error) => {
                 console.error('Error fetching user profile:', error)
                 setRole(null)
-                router.push('/');
-
+                if (pathnameref.current.includes('/dashboard')) {
+                  router.push('/');
+                }
               })
 
             } else {
               // User logged out
               setUser(null)
               setRole(null)
-              router.push('/');
+              if (pathnameref.current.includes('/dashboard')) {
+                router.push('/')
+              }
             }
           } catch (error) {
             console.error(
