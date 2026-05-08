@@ -114,17 +114,6 @@ export default function LoginPage() {
         'Login successful'
       )
 
-      // ========================================
-      // Role-Based Redirect
-      // ========================================
-      console.log('User Role:', response)
-      if (response.role === 'admin') {
-        router.push('/dashboard/admin')
-      } else {
-        router.push(
-          '/dashboard/salesperson'
-        )
-      }
     } catch (error) {
       console.error(error)
 
