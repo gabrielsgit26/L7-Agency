@@ -114,6 +114,11 @@ export default function LoginPage() {
         'Login successful'
       )
 
+      // if (response.role === 'admin') {
+      //   router.replace('/dashboard/admin')
+      // } else if (response.role === 'salesperson') {
+      //   router.replace('/dashboard/salesperson')
+      // }
     } catch (error) {
       console.error(error)
 
