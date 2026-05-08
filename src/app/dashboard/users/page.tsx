@@ -77,113 +77,184 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+      {/* PAGE HEADER */}
+
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
           Salesperson Users
         </h1>
 
-        <p className="text-slate-500">
+        <p className="text-sm text-slate-500 sm:text-base">
           View and manage all salesperson accounts in the CRM.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      {/* STATS + SEARCH */}
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        {/* STATS CARD */}
+
         <Card className="rounded-2xl shadow-sm">
-          <CardHeader>
-            <CardTitle>Salespersons</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base sm:text-lg">
+              Salespersons
+            </CardTitle>
           </CardHeader>
 
           <CardContent>
-            <p className="text-4xl font-bold">
+            <p className="text-3xl font-bold sm:text-4xl">
               {loadingUsers ? '...' : salespersons.length}
             </p>
 
-            <p className="text-sm text-slate-500 mt-2">
+            <p className="mt-2 text-sm leading-6 text-slate-500">
               Total salesperson users currently in the system.
             </p>
           </CardContent>
         </Card>
 
+        {/* SEARCH CARD */}
+
         <Card className="rounded-2xl shadow-sm xl:col-span-2">
-          <CardHeader>
-            <CardTitle>Search Users</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base sm:text-lg">
+              Search Users
+            </CardTitle>
           </CardHeader>
 
           <CardContent>
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-slate-500" />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
               <Input
                 placeholder="Search by name, email, or role"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
+                className="h-11 rounded-xl pl-10 text-sm sm:text-base"
               />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader>
-          <CardTitle>Salesperson Directory</CardTitle>
+      {/* DIRECTORY */}
+
+      <Card className="overflow-hidden rounded-2xl shadow-sm">
+        <CardHeader className="border-b px-4 py-4 sm:px-6">
+          <CardTitle className="text-lg sm:text-xl">
+            Salesperson Directory
+          </CardTitle>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="p-0 sm:p-6">
+          {/* ERROR */}
+
           {error ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div className="m-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {error}
             </div>
           ) : null}
 
-          <div className="mt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Created</TableHead>
-                </TableRow>
-              </TableHeader>
+          {/* MOBILE VIEW */}
 
-              <TableBody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.uid}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">
-                            {user.name || user.uid}
-                          </p>
-                        </div>
-                      </TableCell>
+          <div className="block sm:hidden">
+            {filteredUsers.length > 0 ? (
+              <div className="space-y-3 p-4">
+                {filteredUsers.map((user) => (
+                  <div
+                    key={user.uid}
+                    className="rounded-2xl border bg-white p-4 shadow-sm"
+                  >
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold text-slate-900">
+                          {user.name || user.uid}
+                        </h3>
 
-                      <TableCell>{user.email}</TableCell>
+                        <p className="mt-1 break-all text-sm text-slate-500">
+                          {user.email}
+                        </p>
+                      </div>
 
-                      <TableCell>
+                      <div className="flex items-center justify-between">
                         <Badge className="bg-blue-100 text-blue-700">
                           {user.role}
                         </Badge>
-                      </TableCell>
 
-                      <TableCell>
-                        {formatDate(user.createdAt)}
+                        <p className="text-xs text-slate-500">
+                          {formatDate(user.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-40 items-center justify-center px-4 text-center text-sm text-slate-500">
+                {loadingUsers
+                  ? 'Loading salesperson users...'
+                  : 'No salesperson users found.'}
+              </div>
+            )}
+          </div>
+
+          {/* DESKTOP TABLE */}
+
+          <div className="hidden sm:block">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Created</TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user.uid}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">
+                              {user.name || user.uid}
+                            </p>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          {user.email}
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge className="bg-blue-100 text-blue-700">
+                            {user.role}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell>
+                          {formatDate(user.createdAt)}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4}>
+                        <div className="py-8 text-center text-sm text-slate-500">
+                          {loadingUsers
+                            ? 'Loading salesperson users...'
+                            : 'No salesperson users found.'}
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4}>
-                      <div className="py-6 text-center text-sm text-slate-500">
-                        {loadingUsers
-                          ? 'Loading salesperson users...'
-                          : 'No salesperson users found.'}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>
