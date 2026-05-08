@@ -78,6 +78,7 @@ export function AuthProvider({
           try {
             setLoading(true)
             // User logged in
+            console.log('Auth State Changed:', firebaseUser)
             if (firebaseUser) {
               // TEMP ROLE
               getUserProfile(firebaseUser.uid).then((result) => {
