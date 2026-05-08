@@ -283,8 +283,6 @@ export async function getUserProfile(
     }
 
     const token = await currentUser.getIdToken()
-    console.log('Fetching profile for UID:', uid);
-    console.log('Using token:', token);
     const response = await fetch(`/api/user/profile?uid=${uid}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
