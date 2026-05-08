@@ -74,7 +74,7 @@ export const leadsService = {
   // Delete a lead
   async deleteLead(id: string): Promise<void> {
     const token = await getAuthToken()
-    const res = await fetch(`/api/leads/${id}`, {
+    const res = await fetch(`/api/leads?id=${id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
