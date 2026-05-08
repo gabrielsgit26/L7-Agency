@@ -90,9 +90,12 @@ export function AuthProvider({
                 setRole(result.data.role as UserRole);
                 setUser(result.data);
                 if (result.data.role === 'admin' && !pathnameref.current.includes('/dashboard')) {
+                  console.log('Redirecting to admin dashboard')
                   router.push('/dashboard/admin')
                 } else if (result.data.role === 'salesperson' && !pathnameref.current.includes('/dashboard')) {
+                  console.log('Redirecting to salesperson dashboard')
                   router.push('/dashboard/salesperson')
+
                 }
               }).catch((error) => {
                 console.error('Error fetching user profile:', error)
