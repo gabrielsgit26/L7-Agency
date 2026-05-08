@@ -48,6 +48,9 @@ import {
 
 import { Textarea } from '@/components/ui/textarea'
 
+import { leadsService } from '@/services/leads.service'
+import { Lead } from '@/types/lead'
+
 // ============================================
 // Validation Schema
 // ============================================
@@ -65,11 +68,35 @@ const leadSchema = z.object({
         .string()
         .email('Invalid email'),
 
-    phone: z
+    whatsapp: z
         .string()
-        .min(6, 'Phone number is required'),
+        .min(6, 'WhatsApp number is required'),
+
+    enterprise: z
+        .string()
+        .min(2, 'Enterprise name is required'),
 
     status: z.string(),
+
+    contractValue: z
+        .number()
+        .min(0, 'Contract value must be positive'),
+
+    estimatedValue: z
+        .number()
+        .min(0, 'Estimated value must be positive'),
+
+    keyCustomerPainPoints: z
+        .string()
+        .min(5, 'Please describe key customer pain points'),
+
+    companyAnalysis: z
+        .string()
+        .min(5, 'Please provide company analysis'),
+
+    strategicMessage: z
+        .string()
+        .min(5, 'Please provide strategic message'),
 
     assignedTo: z.string(),
 
@@ -106,7 +133,11 @@ const salespeople = [
 // Component
 // ============================================
 
-export function AddLeadDialog() {
+interface AddLeadDialogProps {
+    onAdded?: () => void
+}
+
+export function AddLeadDialog({ onAdded }: AddLeadDialogProps = {}) {
     const [open, setOpen] =
         useState(false)
 
@@ -126,8 +157,14 @@ export function AddLeadDialog() {
                 firstName: '',
                 lastName: '',
                 email: '',
-                phone: '',
-                status: 'New',
+                whatsapp: '',
+                enterprise: '',
+                status: 'New Lead',
+                contractValue: 0,
+                estimatedValue: 0,
+                keyCustomerPainPoints: '',
+                companyAnalysis: '',
+                strategicMessage: '',
                 assignedTo: '',
                 notes: '',
             },
@@ -143,16 +180,7 @@ export function AddLeadDialog() {
         try {
             setLoading(true)
 
-            // ========================================
-            // TODO:
-            // Replace with Firebase createLead()
-            // ========================================
-
-            console.log(values)
-
-            await new Promise((resolve) =>
-                setTimeout(resolve, 1500)
-            )
+            await leadsService.createLead(values as Lead)
 
             toast.success(
                 'Lead created successfully'
@@ -161,6 +189,8 @@ export function AddLeadDialog() {
             form.reset()
 
             setOpen(false)
+
+            onAdded?.()
         } catch (error) {
             console.error(error)
 
@@ -183,15 +213,13 @@ export function AddLeadDialog() {
         >
             {/* TRIGGER */}
 
-            <DialogTrigger {...({ asChild: true } as any)}>
-                <Button className="rounded-xl">
-                    Add Lead
-                </Button>
+            <DialogTrigger className={"rounded-xl"}>
+                Add Lead
             </DialogTrigger>
 
             {/* CONTENT */}
 
-            <DialogContent className="sm:max-w-2xl rounded-2xl">
+            <DialogContent className="w-[95vw] sm:w-full sm:max-w-[900px] max-h-[90vh] flex flex-col rounded-2xl">
                 <DialogHeader>
                     <DialogTitle>
                         Create New Lead
@@ -203,15 +231,16 @@ export function AddLeadDialog() {
                     </DialogDescription>
                 </DialogHeader>
 
-                {/* FORM */}
+                {/* FORM - SCROLLABLE */}
 
-                <Form {...form}>
-                    <form
-                        onSubmit={form.handleSubmit(
-                            onSubmit
-                        )}
-                        className="space-y-6 mt-4"
-                    >
+                <div className="overflow-y-auto flex-1 pr-4">
+                    <Form {...form}>
+                        <form
+                            onSubmit={form.handleSubmit(
+                                onSubmit
+                            )}
+                            className="space-y-4"
+                        >
                         {/* NAME ROW */}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -262,7 +291,7 @@ export function AddLeadDialog() {
                             />
                         </div>
 
-                        {/* EMAIL + PHONE */}
+                        {/* EMAIL + WHATSAPP */}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* EMAIL */}
@@ -289,21 +318,100 @@ export function AddLeadDialog() {
                                 )}
                             />
 
-                            {/* PHONE */}
+                            {/* WHATSAPP */}
 
                             <FormField
                                 form={form}
-                                name="phone"
+                                name="whatsapp"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>
-                                            Phone
+                                            WhatsApp
                                         </FormLabel>
 
                                         <FormControl>
                                             <Input
-                                                placeholder="+1 555 123 456"
+                                                placeholder="+55 11 99999-9999"
                                                 {...field}
+                                            />
+                                        </FormControl>
+
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        {/* ENTERPRISE */}
+
+                        <FormField
+                            form={form}
+                            name="enterprise"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>
+                                        Enterprise
+                                    </FormLabel>
+
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Company name"
+                                            {...field}
+                                        />
+                                    </FormControl>
+
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        {/* CONTRACT VALUE + ESTIMATED VALUE */}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* CONTRACT VALUE */}
+
+                            <Controller
+                                control={form.control}
+                                name="contractValue"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            Contract Value (R$)
+                                        </FormLabel>
+
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                placeholder="0.00"
+                                                step="0.01"
+                                                {...field}
+                                                onChange={(e: any) => field.onChange(parseFloat(e.target.value) || 0)}
+                                            />
+                                        </FormControl>
+
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* ESTIMATED VALUE */}
+
+                            <Controller
+                                control={form.control}
+                                name="estimatedValue"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            Estimated Value (R$)
+                                        </FormLabel>
+
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                placeholder="0.00"
+                                                step="0.01"
+                                                {...field}
+                                                onChange={(e: any) => field.onChange(parseFloat(e.target.value) || 0)}
                                             />
                                         </FormControl>
 
@@ -338,32 +446,16 @@ export function AddLeadDialog() {
                                             </FormControl>
 
                                             <SelectContent>
-                                                <SelectItem value="New">
-                                                    New
+                                                <SelectItem value="New Lead">
+                                                    New Lead
                                                 </SelectItem>
 
-                                                <SelectItem value="Contacted">
-                                                    Contacted
+                                                <SelectItem value="Under Negotiation">
+                                                    Under Negotiation
                                                 </SelectItem>
 
-                                                <SelectItem value="Qualified">
-                                                    Qualified
-                                                </SelectItem>
-
-                                                <SelectItem value="Proposal Sent">
-                                                    Proposal Sent
-                                                </SelectItem>
-
-                                                <SelectItem value="Negotiation">
-                                                    Negotiation
-                                                </SelectItem>
-
-                                                <SelectItem value="Won">
-                                                    Won
-                                                </SelectItem>
-
-                                                <SelectItem value="Lost">
-                                                    Lost
+                                                <SelectItem value="Closed/Won">
+                                                    Closed/Won
                                                 </SelectItem>
                                             </SelectContent>
                                         </Select>
@@ -426,6 +518,78 @@ export function AddLeadDialog() {
                             />
                         </div>
 
+                        {/* KEY CUSTOMER PAIN POINTS */}
+
+                        <FormField
+                            form={form}
+                            name="keyCustomerPainPoints"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>
+                                        Key Customer Pain Points
+                                    </FormLabel>
+
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Describe the customer's pain points..."
+                                            className="min-h-[100px]"
+                                            {...field}
+                                        />
+                                    </FormControl>
+
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        {/* COMPANY ANALYSIS */}
+
+                        <FormField
+                            form={form}
+                            name="companyAnalysis"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>
+                                        Company Analysis
+                                    </FormLabel>
+
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Provide analysis of the company..."
+                                            className="min-h-[100px]"
+                                            {...field}
+                                        />
+                                    </FormControl>
+
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        {/* STRATEGIC MESSAGE */}
+
+                        <FormField
+                            form={form}
+                            name="strategicMessage"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>
+                                        Strategic Message
+                                    </FormLabel>
+
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Provide the strategic message..."
+                                            className="min-h-[100px]"
+                                            {...field}
+                                        />
+                                    </FormControl>
+
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
                         {/* NOTES */}
 
                         <Controller
@@ -440,7 +604,7 @@ export function AddLeadDialog() {
                                     <FormControl>
                                         <Textarea
                                             placeholder="Additional lead information..."
-                                            className="min-h-[120px]"
+                                            className="min-h-[100px]"
                                             {...field}
                                         />
                                     </FormControl>
@@ -452,7 +616,7 @@ export function AddLeadDialog() {
 
                         {/* FOOTER */}
 
-                        <div className="flex justify-end gap-3 pt-2">
+                        <div className="flex justify-end gap-3 pt-4">
                             <Button
                                 type="button"
                                 variant="outline"
@@ -479,8 +643,9 @@ export function AddLeadDialog() {
                                 )}
                             </Button>
                         </div>
-                    </form>
-                </Form>
+                        </form>
+                    </Form>
+                </div>
             </DialogContent>
         </Dialog>
     )

@@ -30,6 +30,9 @@ import {
   Pie,
   Cell,
 } from 'recharts'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/auth-context'
+import { useEffect } from 'react'
 
 // ============================================
 // MOCK DATA
@@ -63,6 +66,18 @@ const COLORS = [
 // ============================================
 
 export default function AdminDashboardPage() {
+
+  const router = useRouter()
+  const { user, role } = useAuth()
+  useEffect(() => {
+    if (role !== 'admin') {
+      router.push('/dashboard/leads')
+    } else if (!user) {
+      router.push('/auth/login')
+    }
+  }, [role, user])
+
+
   return (
     <div className="space-y-8">
       {/* PAGE HEADER */}

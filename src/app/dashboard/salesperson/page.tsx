@@ -1,454 +1,267 @@
 // ============================================
-// FILE: src/app/dashboard/leads/page.tsx
+// FILE: src/app/dashboard/admin/page.tsx
 // ============================================
 
 'use client'
 
-import { useMemo, useState } from 'react'
-
 import {
-    Plus,
-    Search,
-    MoreHorizontal,
+  Users,
+  DollarSign,
+  Briefcase,
+  TrendingUp,
 } from 'lucide-react'
 
 import {
-    ColumnDef,
-    flexRender,
-    getCoreRowModel,
-    getPaginationRowModel,
-    useReactTable,
-} from '@tanstack/react-table'
-
-import { Input } from '@/components/ui/input'
-
-import { Button } from '@/components/ui/button'
-
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card'
 
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
-
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-
-import { Badge } from '@/components/ui/badge'
-import { AddLeadDialog } from '@/components/leads/add-lead-dialog'
-import { EditLeadDialog } from '@/components/leads/edit-lead-dialog'
-import { DeleteLeadDialog } from '@/components/leads/delete-lead-dialog'
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/auth-context'
+import { useEffect } from 'react'
 
 // ============================================
-// Lead Type
+// MOCK DATA
+// Replace later with Firestore data
 // ============================================
 
-type LeadStatus =
-    | 'New'
-    | 'Contacted'
-    | 'Qualified'
-    | 'Proposal Sent'
-    | 'Negotiation'
-    | 'Won'
-    | 'Lost'
+const revenueData = [
+  { month: 'Jan', revenue: 4000 },
+  { month: 'Feb', revenue: 3000 },
+  { month: 'Mar', revenue: 5000 },
+  { month: 'Apr', revenue: 7000 },
+  { month: 'May', revenue: 6000 },
+]
 
-interface Lead {
-    id: string
-    firstName: string
-    lastName: string
-    email: string
-    phone: string
-    status: LeadStatus
-    assignedTo: string
-}
+const pipelineData = [
+  { name: 'New', value: 20 },
+  { name: 'Qualified', value: 15 },
+  { name: 'Negotiation', value: 10 },
+  { name: 'Won', value: 8 },
+]
 
-// ============================================
-// Mock Data
-// Replace later with Firestore
-// ============================================
-
-const leadsData: Lead[] = [
-    {
-        id: '1',
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john@example.com',
-        phone: '+1 555 123 456',
-        status: 'New',
-        assignedTo: 'Sarah',
-    },
-
-    {
-        id: '2',
-        firstName: 'Michael',
-        lastName: 'Brown',
-        email: 'michael@example.com',
-        phone: '+1 555 222 111',
-        status: 'Negotiation',
-        assignedTo: 'David',
-    },
-
-    {
-        id: '3',
-        firstName: 'Emma',
-        lastName: 'Wilson',
-        email: 'emma@example.com',
-        phone: '+1 555 987 654',
-        status: 'Won',
-        assignedTo: 'Sarah',
-    },
+const COLORS = [
+  '#2563EB',
+  '#7C3AED',
+  '#D97706',
+  '#16A34A',
 ]
 
 // ============================================
-// Status Badge Styles
+// Dashboard Page
 // ============================================
 
-function getStatusVariant(
-    status: LeadStatus
-) {
-    switch (status) {
-        case 'New':
-            return 'bg-blue-100 text-blue-700'
+export default function AdminDashboardPage() {
 
-        case 'Contacted':
-            return 'bg-cyan-100 text-cyan-700'
-
-        case 'Qualified':
-            return 'bg-purple-100 text-purple-700'
-
-        case 'Proposal Sent':
-            return 'bg-orange-100 text-orange-700'
-
-        case 'Negotiation':
-            return 'bg-yellow-100 text-yellow-700'
-
-        case 'Won':
-            return 'bg-green-100 text-green-700'
-
-        case 'Lost':
-            return 'bg-red-100 text-red-700'
-
-        default:
-            return ''
+  const router = useRouter()
+  const { user, role } = useAuth()
+  useEffect(() => {
+    if (role !== 'salesperson') {
+      router.push('/dashboard/leads')
+    } else if (!user) {
+      router.push('/auth/login')
     }
-}
+  }, [role, user])
 
-// ============================================
-// Leads Page
-// ============================================
 
-export default function LeadsPage() {
-    const [search, setSearch] =
-        useState('')
+  return (
+    <div className="space-y-8">
+      {/* PAGE HEADER */}
 
-    // ============================================
-    // Filtered Data
-    // ============================================
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Sales Dashboard
+        </h1>
 
-    const filteredData = useMemo(() => {
-        return leadsData.filter((lead) => {
-            const fullName =
-                `${lead.firstName} ${lead.lastName}`.toLowerCase()
+        <p className="text-slate-500">
+          Overview of your CRM system
+          performance.
+        </p>
+      </div>
 
-            return (
-                fullName.includes(
-                    search.toLowerCase()
-                ) ||
-                lead.email.includes(
-                    search.toLowerCase()
-                )
-            )
-        })
-    }, [search])
+      {/* ANALYTICS CARDS */}
 
-    // ============================================
-    // Table Columns
-    // ============================================
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* TOTAL LEADS */}
 
-    const columns: ColumnDef<Lead>[] = [
-        {
-            accessorKey: 'firstName',
+        <Card className="rounded-2xl shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">
+                  Total Leads
+                </p>
 
-            header: 'Name',
+                <h2 className="text-3xl font-bold mt-2">
+                  1,240
+                </h2>
+              </div>
 
-            cell: ({ row }) => (
-                <div>
-                    <p className="font-medium">
-                        {row.original.firstName}{' '}
-                        {row.original.lastName}
-                    </p>
-
-                    <p className="text-sm text-slate-500">
-                        {row.original.email}
-                    </p>
-                </div>
-            ),
-        },
-
-        {
-            accessorKey: 'phone',
-
-            header: 'Phone',
-        },
-
-        {
-            accessorKey: 'status',
-
-            header: 'Status',
-
-            cell: ({ row }) => (
-                <Badge
-                    className={getStatusVariant(
-                        row.original.status
-                    )}
-                >
-                    {row.original.status}
-                </Badge>
-            ),
-        },
-
-        {
-            accessorKey: 'assignedTo',
-
-            header: 'Assigned To',
-        },
-
-        {
-            id: 'actions',
-
-            header: 'Actions',
-
-            cell: ({ row }) => (
-                <DropdownMenu>
-                    <DropdownMenuTrigger >
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                        >
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                            View Lead
-                        </DropdownMenuItem>
-
-                        <EditLeadDialog lead={row.original} />
-
-                        <DeleteLeadDialog
-                            lead={row.original}
-                            onDeleted={() => { }} // optional refresh function
-                        />
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            ),
-        },
-    ]
-
-    // ============================================
-    // Table Setup
-    // ============================================
-
-    const table = useReactTable({
-        data: filteredData,
-        columns,
-
-        getCoreRowModel:
-            getCoreRowModel(),
-
-        getPaginationRowModel:
-            getPaginationRowModel(),
-    })
-
-    // ============================================
-    // UI
-    // ============================================
-
-    return (
-        <div className="space-y-6">
-            {/* PAGE HEADER */}
-
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold">
-                        Leads
-                    </h1>
-
-                    <p className="text-slate-500 mt-1">
-                        Manage all CRM leads.
-                    </p>
-                </div>
-
-                <AddLeadDialog />
+              <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* SEARCH */}
+        {/* CLOSED DEALS */}
 
-            <Card className="rounded-2xl shadow-sm">
-                <CardContent className="p-4">
-                    <div className="relative max-w-md">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Card className="rounded-2xl shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">
+                  Closed Deals
+                </p>
 
-                        <Input
-                            placeholder="Search leads..."
-                            className="pl-10 rounded-xl"
-                            value={search}
-                            onChange={(e) =>
-                                setSearch(
-                                    e.target.value
-                                )
-                            }
-                        />
-                    </div>
-                </CardContent>
-            </Card>
+                <h2 className="text-3xl font-bold mt-2">
+                  320
+                </h2>
+              </div>
 
-            {/* LEADS TABLE */}
+              <div className="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center">
+                <Briefcase className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-            <Card className="rounded-2xl shadow-sm">
-                <CardHeader>
-                    <CardTitle>
-                        Leads List
-                    </CardTitle>
-                </CardHeader>
+        {/* REVENUE */}
 
-                <CardContent>
-                    <div className="rounded-xl border overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                {table
-                                    .getHeaderGroups()
-                                    .map(
-                                        (
-                                            headerGroup
-                                        ) => (
-                                            <TableRow
-                                                key={
-                                                    headerGroup.id
-                                                }
-                                            >
-                                                {headerGroup.headers.map(
-                                                    (
-                                                        header
-                                                    ) => (
-                                                        <TableHead
-                                                            key={
-                                                                header.id
-                                                            }
-                                                        >
-                                                            {flexRender(
-                                                                header
-                                                                    .column
-                                                                    .columnDef
-                                                                    .header,
-                                                                header.getContext()
-                                                            )}
-                                                        </TableHead>
-                                                    )
-                                                )}
-                                            </TableRow>
-                                        )
-                                    )}
-                            </TableHeader>
+        <Card className="rounded-2xl shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">
+                  Revenue
+                </p>
 
-                            <TableBody>
-                                {table
-                                    .getRowModel()
-                                    .rows.length ? (
-                                    table
-                                        .getRowModel()
-                                        .rows.map(
-                                            (row) => (
-                                                <TableRow
-                                                    key={
-                                                        row.id
-                                                    }
-                                                >
-                                                    {row
-                                                        .getVisibleCells()
-                                                        .map(
-                                                            (
-                                                                cell
-                                                            ) => (
-                                                                <TableCell
-                                                                    key={
-                                                                        cell.id
-                                                                    }
-                                                                >
-                                                                    {flexRender(
-                                                                        cell
-                                                                            .column
-                                                                            .columnDef
-                                                                            .cell,
-                                                                        cell.getContext()
-                                                                    )}
-                                                                </TableCell>
-                                                            )
-                                                        )}
-                                                </TableRow>
-                                            )
-                                        )
-                                ) : (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={
-                                                columns.length
-                                            }
-                                            className="h-32 text-center"
-                                        >
-                                            No leads found.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                <h2 className="text-3xl font-bold mt-2">
+                  $92,000
+                </h2>
+              </div>
 
-                    {/* PAGINATION */}
+              <div className="h-12 w-12 rounded-xl bg-yellow-100 flex items-center justify-center">
+                <DollarSign className="h-6 w-6 text-yellow-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                    <div className="flex items-center justify-end gap-2 mt-6">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                                table.previousPage()
-                            }
-                            disabled={
-                                !table.getCanPreviousPage()
-                            }
-                        >
-                            Previous
-                        </Button>
+        {/* GROWTH */}
 
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                                table.nextPage()
-                            }
-                            disabled={
-                                !table.getCanNextPage()
-                            }
-                        >
-                            Next
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    )
+        <Card className="rounded-2xl shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">
+                  Growth
+                </p>
+
+                <h2 className="text-3xl font-bold mt-2">
+                  +18%
+                </h2>
+              </div>
+
+              <div className="h-12 w-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* CHARTS */}
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* REVENUE CHART */}
+
+        <Card className="xl:col-span-2 rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle>
+              Monthly Revenue
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <ResponsiveContainer
+              width="100%"
+              height={350}
+            >
+              <BarChart data={revenueData}>
+                <CartesianGrid strokeDasharray="3 3" />
+
+                <XAxis dataKey="month" />
+
+                <YAxis />
+
+                <Tooltip />
+
+                <Bar
+                  dataKey="revenue"
+                  fill="#2563EB"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* PIPELINE CHART */}
+
+        <Card className="rounded-2xl shadow-sm">
+          <CardHeader>
+            <CardTitle>
+              Sales Pipeline
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <ResponsiveContainer
+              width="100%"
+              height={350}
+            >
+              <PieChart>
+                <Pie
+                  data={pipelineData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  dataKey="value"
+                  label
+                >
+                  {pipelineData.map(
+                    (_, index) => (
+                      <Cell
+                        key={index}
+                        fill={
+                          COLORS[index]
+                        }
+                      />
+                    )
+                  )}
+                </Pie>
+
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
 }

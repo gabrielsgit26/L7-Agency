@@ -122,7 +122,7 @@ export default function LoginPage() {
         router.push('/dashboard/admin')
       } else {
         router.push(
-          '/dashboard/salesperson'
+          '/dashboard/leads'
         )
       }
     } catch (error) {

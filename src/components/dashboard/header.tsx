@@ -8,7 +8,6 @@ import { useState } from 'react'
 
 import {
   Bell,
-  Menu,
   Search,
 } from 'lucide-react'
 
@@ -18,13 +17,8 @@ import { Button } from '@/components/ui/button'
 
 import { Input } from '@/components/ui/input'
 
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from '@/components/ui/sheet'
 
-import { Sidebar } from './sidebar'
+import { MobileSidebar } from './sidebar'
 
 // ============================================
 // Header Component
@@ -48,24 +42,7 @@ export function Header() {
       <div className="flex items-center gap-3">
         {/* MOBILE SIDEBAR */}
 
-        <Sheet>
-          <SheetTrigger>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-
-          <SheetContent
-            side="left"
-            className="p-0 w-72"
-          >
-            <Sidebar />
-          </SheetContent>
-        </Sheet>
+        <MobileSidebar />
 
         {/* SEARCH */}
 

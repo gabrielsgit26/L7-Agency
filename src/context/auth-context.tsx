@@ -17,6 +17,10 @@ import {
 } from 'react'
 
 import { auth } from '@/lib/firebase/client'
+import { getUserProfile, getUserRole } from '@/services/auth.service'
+import { usePathname, useRouter } from 'next/navigation'
+import { profile } from 'console'
+import path from 'path'
 
 // ============================================
 // Types
@@ -53,6 +57,7 @@ export function AuthProvider({
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
   const [user, setUser] =
     useState<User | null>(null)
 
@@ -62,6 +67,7 @@ export function AuthProvider({
   const [role, setRole] =
     useState<UserRole>(null)
 
+  const router = useRouter()
   useEffect(() => {
     const unsubscribe =
       onAuthStateChanged(
@@ -69,21 +75,25 @@ export function AuthProvider({
         async (firebaseUser) => {
           try {
             setLoading(true)
-
             // User logged in
             if (firebaseUser) {
-              setUser(firebaseUser)
-
-              // OPTIONAL:
-              // Later you can fetch role
-              // from Firestore here
-
-              // Example:
-              // const userDoc = await getDoc(...)
-              // setRole(userDoc.data()?.role)
-
               // TEMP ROLE
-              setRole('salesperson')
+              console.log('User logged in:', firebaseUser)
+              getUserProfile(firebaseUser.uid).then((result) => {
+                if (!result.success) {
+                  console.error('Failed to fetch user profile:', result.message)
+                  setRole(null)
+                  return
+                }
+                setRole(result.data.role as UserRole);
+                console.log('User profile:', result.data)
+
+                setUser(result.data);
+              }).catch((error) => {
+                console.error('Error fetching user profile:', error)
+                setRole(null)
+              })
+
             } else {
               // User logged out
               setUser(null)
@@ -102,6 +112,15 @@ export function AuthProvider({
 
     return () => unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (loading) return // Wait until loading is false
+    if (role === 'admin' && !pathname.includes('/dashboard')) {
+      router.push('/dashboard/admin')
+    } else if (role === 'salesperson' && !pathname.includes('/dashboard')) {
+      router.push('/dashboard/salesperson')
+    }
+  }, [user, loading])
 
   return (
     <AuthContext.Provider

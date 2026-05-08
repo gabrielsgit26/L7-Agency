@@ -47,11 +47,11 @@ export const DeleteLeadDialog: React.FC<DeleteLeadDialogProps> = ({
 
   return (
     <Dialog>
-      <DialogTrigger >
-        <Button variant="destructive" size="sm">
+      <DialogTrigger className={"flex my-2 justify-center items-center px-2 cursor-point text-sm"}>
+        {/* <Button variant="destructive" size="sm"> */}
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
-        </Button>
+        {/* </Button> */}
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-[400px]">

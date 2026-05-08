@@ -3,26 +3,6 @@
 import { Lead } from '@/types/lead'
 import { auth } from '@/lib/firebase/client'
 
-interface CreateLeadDTO {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  status: Lead['status']
-  assignedTo: string
-  notes?: string
-}
-
-interface UpdateLeadDTO {
-  firstName?: string
-  lastName?: string
-  email?: string
-  phone?: string
-  status?: Lead['status']
-  assignedTo?: string
-  notes?: string
-}
-
 // -----------------------------
 // Helper: get Firebase ID Token
 // -----------------------------
@@ -53,9 +33,9 @@ export const leadsService = {
   },
 
   // Create a new lead
-  async createLead(lead: CreateLeadDTO): Promise<string> {
+  async createLead(lead: Lead): Promise<string> {
     const token = await getAuthToken()
-    const res = await fetch('/api/leads/create', {
+    const res = await fetch('/api/leads', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -74,15 +54,15 @@ export const leadsService = {
   },
 
   // Update a lead
-  async updateLead(id: string, updates: UpdateLeadDTO): Promise<void> {
+  async updateLead(id: string, updates: Lead): Promise<void> {
     const token = await getAuthToken()
-    const res = await fetch(`/api/leads/${id}`, {
+    const res = await fetch(`/api/leads`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(updates),
+      body: JSON.stringify({ id, ...updates }),
     })
 
     if (!res.ok) {

@@ -191,18 +191,24 @@ export async function getUserRole(
   uid: string
 ) {
   try {
-    const userDoc = await getDoc(
-      doc(db, 'users', uid)
-    )
-
-    if (!userDoc.exists()) {
+    const currentUser = auth.currentUser
+    if (!currentUser) {
       return null
     }
 
-    const userData =
-      userDoc.data()
+    const token = await currentUser.getIdToken()
+    const response = await fetch(`/api/user/role?uid=${uid}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
 
-    return userData.role as UserRole
+    if (!response.ok) {
+      return null
+    }
+
+    const role = await response.json()
+    return role as UserRole
   } catch (error) {
     console.error(
       'Get Role Error:',
@@ -214,6 +220,53 @@ export async function getUserRole(
 }
 
 // ============================================
+// GET SALESPERSON USERS
+// ============================================
+
+export async function getSalespersons() {
+  try {
+    const currentUser = auth.currentUser
+    if (!currentUser) {
+      return {
+        success: false,
+        message: 'Not authenticated.',
+        users: [],
+      }
+    }
+
+    const token = await currentUser.getIdToken()
+    const response = await fetch('/api/user/list', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.error || 'Failed to fetch salespersons.',
+        users: [],
+      }
+    }
+
+    return {
+      success: true,
+      users: data.users || [],
+    }
+  } catch (error: any) {
+    console.error('Get Salespersons Error:', error)
+
+    return {
+      success: false,
+      message: error.message || 'Failed to fetch salespersons.',
+      users: [],
+    }
+  }
+}
+
+// ============================================
 // GET USER PROFILE
 // ============================================
 
@@ -221,18 +274,32 @@ export async function getUserProfile(
   uid: string
 ) {
   try {
-    const userDoc = await getDoc(
-      doc(db, 'users', uid)
-    )
-
-    if (!userDoc.exists()) {
-      return null
+    const currentUser = auth.currentUser
+    if (!currentUser) {
+      return {
+        success: false,
+        message: 'Not authenticated.',
+      }
     }
 
-    return {
-      success: true,
-      data: userDoc.data(),
+    const token = await currentUser.getIdToken()
+    console.log('Fetching profile for UID:', uid);
+    console.log('Using token:', token);
+    const response = await fetch(`/api/user/profile?uid=${uid}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    const data = await response.json()
+    if (!response.ok) {
+      return {
+        success: false,
+        message: data.error || 'Failed to fetch profile.',
+      }
     }
+
+    return data
   } catch (error: any) {
     console.error(
       'Get User Profile Error:',
