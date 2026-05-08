@@ -114,7 +114,10 @@ export function AuthProvider({
   }, [])
 
   useEffect(() => {
-    if (loading) return // Wait until loading is false
+    if ((role === null && !loading) && pathname.includes('/dashboard')) {
+      router.push('/');
+      return;
+    }
     if (role === 'admin' && !pathname.includes('/dashboard')) {
       router.push('/dashboard/admin')
     } else if (role === 'salesperson' && !pathname.includes('/dashboard')) {
