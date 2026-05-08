@@ -1,5 +1,5 @@
 // ============================================
-// FILE: src/app/dashboard/admin/page.tsx
+// FILE: src/app/dashboard/salesperson/page.tsx
 // ============================================
 
 'use client'
@@ -65,15 +65,15 @@ const COLORS = [
 // Dashboard Page
 // ============================================
 
-export default function AdminDashboardPage() {
+export default function SalesDashboardPage() {
 
   const router = useRouter()
   const { user, role } = useAuth()
   useEffect(() => {
     if (role !== 'salesperson') {
-      router.push('/dashboard/leads')
+      router.push('/dashboard/admin')
     } else if (!user) {
-      router.push('/auth/login')
+      router.push('/')
     }
   }, [role, user])
 

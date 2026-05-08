@@ -91,10 +91,10 @@ export function AuthProvider({
               setUser(result.data);
               if (result.data.role === 'admin' && !pathnameref.current.includes('/dashboard')) {
                 console.log('Redirecting to admin dashboard')
-                router.push('/dashboard/admin')
+                router.replace('/dashboard/admin')
               } else if (result.data.role === 'salesperson' && !pathnameref.current.includes('/dashboard')) {
                 console.log('Redirecting to salesperson dashboard')
-                router.push('/dashboard/salesperson')
+                router.replace('/dashboard/salesperson')
               }
 
             } else {
@@ -102,7 +102,7 @@ export function AuthProvider({
               setUser(null)
               setRole(null)
               if (pathnameref.current.includes('/dashboard')) {
-                router.push('/')
+                router.replace('/')
               }
             }
           } catch (error) {

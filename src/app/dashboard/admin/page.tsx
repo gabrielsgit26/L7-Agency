@@ -71,9 +71,9 @@ export default function AdminDashboardPage() {
   const { user, role } = useAuth()
   useEffect(() => {
     if (role !== 'admin') {
-      router.push('/dashboard/leads')
+      router.push('/dashboard/salesperson')
     } else if (!user) {
-      router.push('/auth/login')
+      router.push('/')
     }
   }, [role, user])
 
