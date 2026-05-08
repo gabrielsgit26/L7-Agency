@@ -81,29 +81,21 @@ export function AuthProvider({
             console.log('Auth State Changed:', firebaseUser)
             if (firebaseUser) {
               // TEMP ROLE
-              getUserProfile(firebaseUser.uid).then((result) => {
-                if (!result.success) {
-                  console.error('Failed to fetch user profile:', result.message)
-                  setRole(null)
-                  return
-                }
-                setRole(result.data.role as UserRole);
-                setUser(result.data);
-                if (result.data.role === 'admin' && !pathnameref.current.includes('/dashboard')) {
-                  console.log('Redirecting to admin dashboard')
-                  router.push('/dashboard/admin')
-                } else if (result.data.role === 'salesperson' && !pathnameref.current.includes('/dashboard')) {
-                  console.log('Redirecting to salesperson dashboard')
-                  router.push('/dashboard/salesperson')
-
-                }
-              }).catch((error) => {
-                console.error('Error fetching user profile:', error)
+              const result = await getUserProfile(firebaseUser.uid);
+              if (!result.success) {
+                console.error('Failed to fetch user profile:', result.message)
                 setRole(null)
-                if (pathnameref.current.includes('/dashboard')) {
-                  router.push('/');
-                }
-              })
+                return
+              }
+              setRole(result.data.role as UserRole);
+              setUser(result.data);
+              if (result.data.role === 'admin' && !pathnameref.current.includes('/dashboard')) {
+                console.log('Redirecting to admin dashboard')
+                router.push('/dashboard/admin')
+              } else if (result.data.role === 'salesperson' && !pathnameref.current.includes('/dashboard')) {
+                console.log('Redirecting to salesperson dashboard')
+                router.push('/dashboard/salesperson')
+              }
 
             } else {
               // User logged out
