@@ -13,6 +13,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react'
 
@@ -58,6 +59,7 @@ export function AuthProvider({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const pathnameref = useRef("");
   const [user, setUser] =
     useState<User | null>(null)
 
@@ -78,7 +80,6 @@ export function AuthProvider({
             // User logged in
             if (firebaseUser) {
               // TEMP ROLE
-              console.log('User logged in:', firebaseUser)
               getUserProfile(firebaseUser.uid).then((result) => {
                 if (!result.success) {
                   console.error('Failed to fetch user profile:', result.message)
@@ -86,18 +87,24 @@ export function AuthProvider({
                   return
                 }
                 setRole(result.data.role as UserRole);
-                console.log('User profile:', result.data)
-
                 setUser(result.data);
+                if (result.data.role === 'admin' && !pathnameref.current.includes('/dashboard')) {
+                  router.push('/dashboard/admin')
+                } else if (result.data.role === 'salesperson' && !pathnameref.current.includes('/dashboard')) {
+                  router.push('/dashboard/salesperson')
+                }
               }).catch((error) => {
                 console.error('Error fetching user profile:', error)
                 setRole(null)
+                router.push('/');
+
               })
 
             } else {
               // User logged out
               setUser(null)
               setRole(null)
+              router.push('/');
             }
           } catch (error) {
             console.error(
@@ -114,17 +121,8 @@ export function AuthProvider({
   }, [])
 
   useEffect(() => {
-    if ((role === null && !loading) && pathname.includes('/dashboard')) {
-      router.push('/');
-      return;
-    }
-    if (role === 'admin' && !pathname.includes('/dashboard')) {
-      router.push('/dashboard/admin')
-    } else if (role === 'salesperson' && !pathname.includes('/dashboard')) {
-      router.push('/dashboard/salesperson')
-    }
-  }, [user, role, loading])
-
+    pathnameref.current = pathname;
+  }, [pathname])
   return (
     <AuthContext.Provider
       value={{
